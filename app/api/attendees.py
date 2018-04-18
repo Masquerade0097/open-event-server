@@ -1,5 +1,8 @@
+from __future__ import print_function
+import sys
 from flask_jwt import current_identity
 from flask_rest_jsonapi import ResourceDetail, ResourceList, ResourceRelationship
+
 
 from app.api.bootstrap import api
 from app.api.helpers.db import safe_query
@@ -30,6 +33,11 @@ class AttendeeListPost(ResourceList):
         :return:
         """
         require_relationship(['ticket', 'event'], data)
+
+        ticket = db.session.query(Ticket).filter_by(id=data['ticket']).first()
+        if ticket.event_id != int(data['event']):
+            raise UnprocessableEntity({'pointer': '/data/relationships/ticket'},
+                                          "Ticket belongs to a different Event")
 
     decorators = (jwt_required,)
     methods = ['POST']
